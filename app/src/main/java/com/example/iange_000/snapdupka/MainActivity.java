@@ -57,7 +57,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
     Context context = this;
     Bitmap photo;
-    RequestData rData;
+
     TextView comment;
     Location currentLocation;
     Button sendButton;
@@ -180,10 +180,10 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     Thread thread = new Thread(new Runnable(){
         @Override
         public void run(){
-            rData = new RequestData(photo,comment.getText().toString(),currentLocation);
+
             String lat = Double.toString(currentLocation.getLatitude());
             String lon = Double.toString(currentLocation.getLongitude());
-            Log.i(TAG, rData.toString());
+            Log.i(TAG, "Thread started");
             HttpClient httpclient = new DefaultHttpClient();
             HttpPost httppost = new HttpPost("https://snaphole.pagekite.me/HelloWorldApp/Androidtest");
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -192,19 +192,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
             String encoded = Base64.encodeToString(byteArray, Base64.DEFAULT);
 
             try {
-                // Add your data
-               /* List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
 
-                nameValuePairs.add(new BasicNameValuePair("comment", comment.getText().toString()));
-                nameValuePairs.add(new BasicNameValuePair("lat", lat));
-                nameValuePairs.add(new BasicNameValuePair("lon", lon));
-                nameValuePairs.add(new BasicNameValuePair("photo", encoded));
-                httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-               // httppost.setEntity(new ByteArrayEntity(byteArray));
-                // Execute HTTP Post Request
-
-                HttpResponse response = httpclient.execute(httppost);
-                Log.i(TAG, "request sent");*/
                 MultipartEntityBuilder builder = MultipartEntityBuilder.create();
                 builder.setCharset(MIME.UTF8_CHARSET);
 
@@ -223,11 +211,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                 HttpResponse response = httpclient.execute(httppost);
                 Log.i(TAG, "request sent");
                 Log.i(TAG, builder.build().toString());
-           /* } catch (ClientProtocolException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }*/
+
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
