@@ -11,7 +11,6 @@ import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
@@ -28,6 +27,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
 
+
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
@@ -35,8 +35,12 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.MIME;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -57,6 +61,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     TextView comment;
     Location currentLocation;
     Button sendButton;
+    File file;
     private GoogleApiClient mGoogleApiClient;
     public static final String TAG = Activity.class.getSimpleName();
     private static final int TAKE_PICTURE = 1;
@@ -90,11 +95,10 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     }
 
 
-
-
     public void launchCamera(View view){
         Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
         File photo = new File(Environment.getExternalStorageDirectory(),  "Pic.jpg");
+        file = photo;
         intent.putExtra(MediaStore.EXTRA_OUTPUT,
                 Uri.fromFile(photo));
         imageUri = Uri.fromFile(photo);
@@ -189,7 +193,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
             try {
                 // Add your data
-                List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
+               /* List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
 
                 nameValuePairs.add(new BasicNameValuePair("comment", comment.getText().toString()));
                 nameValuePairs.add(new BasicNameValuePair("lat", lat));
@@ -198,13 +202,36 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                 httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
                // httppost.setEntity(new ByteArrayEntity(byteArray));
                 // Execute HTTP Post Request
+
+                HttpResponse response = httpclient.execute(httppost);
+                Log.i(TAG, "request sent");*/
+                MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+                builder.setCharset(MIME.UTF8_CHARSET);
+
+                httppost.addHeader("Accept", "application/json");
+
+                if (comment.getText().toString() != null)
+                    builder.addTextBody("comment", comment.getText().toString(), ContentType.create("text/plain", MIME.UTF8_CHARSET));
+                if (lat != null)
+                    builder.addTextBody("lat", lat, ContentType.create("text/plain", MIME.UTF8_CHARSET));
+                if (lon != null)
+                    builder.addTextBody("lon", lon, ContentType.create("text/plain", MIME.UTF8_CHARSET));
+                if (file != null)
+                    builder.addBinaryBody("PHOTO", file, ContentType.MULTIPART_FORM_DATA, file.getName());
+
+                httppost.setEntity(builder.build());
                 HttpResponse response = httpclient.execute(httppost);
                 Log.i(TAG, "request sent");
-
-            } catch (ClientProtocolException e) {
+                Log.i(TAG, builder.build().toString());
+           /* } catch (ClientProtocolException e) {
                 e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
+            }*/
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                httpclient.getConnectionManager().shutdown();
             }
         }
     });
