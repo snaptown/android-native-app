@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.location.Location;
@@ -53,6 +54,13 @@ import java.util.List;
 
 public class MainActivity extends Activity implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener {
+
+
+
+
+
+
+
     ImageView photoView;
 
     Context context = this;
@@ -71,12 +79,27 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Button button  = (Button) findViewById(R.id.photoButton);
         photoView = (ImageView) findViewById(R.id.photoView);
         comment = (TextView) findViewById(R.id.textField);
         sendButton = (Button) findViewById(R.id.sendButton);
+        //Check if the user is logged
+
+            SharedPreferences sharedPref = getSharedPreferences("userinfo", Context.MODE_PRIVATE);
+            String name = sharedPref.getString("username", "");
+
+
+        if(name.isEmpty()) {
+
+                Intent intent = new Intent(this, LoginActivity.class);
+                startActivity(intent);
+
+            }
+
+
 
         //prompt user to enable gps
         if (((LocationManager) context.getSystemService(Context.LOCATION_SERVICE))
