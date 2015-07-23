@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class LoginActivity extends Activity {
+public class RgisterActivity extends Activity {
 
     EditText usernameText ;
     EditText passwordText ;
@@ -38,12 +38,12 @@ public class LoginActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
+        setContentView(R.layout.activity_rgister);
         ImageView iv = (ImageView)findViewById(R.id.logoView); iv.setImageResource(R.drawable.log);
 
         Button logInButton = (Button) findViewById(R.id.registerButton);
-         usernameText = (EditText) findViewById(R.id.editText);
-         passwordText = (EditText) findViewById(R.id.editText2);
+        usernameText = (EditText) findViewById(R.id.editText);
+        passwordText = (EditText) findViewById(R.id.editText2);
     }
 
 
@@ -53,84 +53,80 @@ public class LoginActivity extends Activity {
         getMenuInflater().inflate(R.menu.menu_login, menu);
         return true;
     }
-    public void saveData(View view){
+    public void register(View view){
 
         username = usernameText.getText().toString();
         password = passwordText.getText().toString();
         if(!username.isEmpty()&&!password.isEmpty()) {
-        new Thread(new Runnable(){
-            @Override
-            public void run() {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
 
 
-                Log.i("From Login", "Thread started");
-                HttpClient httpclient = new DefaultHttpClient();
-                HttpPost httppost = new HttpPost("https://b20db94c.ngrok.io/snaptown/login");
-                LoginActivity.this.runOnUiThread(new Runnable() {
-                    public void run() {
-                        Toast.makeText(LoginActivity.this, "Logging in ....", Toast.LENGTH_SHORT).show();
-                    }
-                });
+                    Log.i("From Login", "Thread started");
+                    HttpClient httpclient = new DefaultHttpClient();
+                    HttpPost httppost = new HttpPost("https://b20db94c.ngrok.io/snaptown/register");
+                    RgisterActivity.this.runOnUiThread(new Runnable() {
+                        public void run() {
+                            Toast.makeText(RgisterActivity.this, "Registering....", Toast.LENGTH_SHORT).show();
+                        }
+                    });
 
-                try {
+                    try {
 
-                    List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
-                    nameValuePairs.add(new BasicNameValuePair("username", username));
-                    nameValuePairs.add(new BasicNameValuePair("password",password));
-                    httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
-                    HttpResponse response = httpclient.execute(httppost);
-                    Log.i("From Login", "request sent");
+                        List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
+                        nameValuePairs.add(new BasicNameValuePair("username", username));
+                        nameValuePairs.add(new BasicNameValuePair("password", password));
+                        httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
+                        HttpResponse response = httpclient.execute(httppost);
+                        Log.i("From Login", "request sent");
 
-                    int statuscode =response.getStatusLine().getStatusCode();
-                    if(statuscode == 202){
-                        SharedPreferences sharedPref = getSharedPreferences("userinfo", Context.MODE_PRIVATE);
-                        SharedPreferences.Editor editor = sharedPref.edit();
+                        int statuscode = response.getStatusLine().getStatusCode();
+                        if (statuscode == 200) {
+                            SharedPreferences sharedPref = getSharedPreferences("userinfo", Context.MODE_PRIVATE);
+                            SharedPreferences.Editor editor = sharedPref.edit();
 
-                        editor.putString("username", usernameText.getText().toString());
-                        editor.putString("password", passwordText.getText().toString());
-                        editor.apply();
-                        Log.i("From Login", "Accepted");
-                        try {
-                            runOnUiThread(new Runnable() {
+                            editor.putString("username", usernameText.getText().toString());
+                            editor.putString("password", passwordText.getText().toString());
+                            editor.apply();
+                            Log.i("From Login", "Accepted");
+                            try {
+                                runOnUiThread(new Runnable() {
 
-                                @Override
+                                    @Override
+                                    public void run() {
+                                        Intent intent = new Intent(RgisterActivity.this, MainActivity.class);
+                                        startActivity(intent);
+                                    }
+                                });
+                                Thread.sleep(300);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+
+
+                        } else {
+                            Log.i("From Login", "Unauthorised");
+                            RgisterActivity.this.runOnUiThread(new Runnable() {
                                 public void run() {
-
-                                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                                    startActivity(intent);
+                                    Toast.makeText(RgisterActivity.this, "Username has been taken! Try with another one", Toast.LENGTH_SHORT).show();
                                 }
                             });
-                            Thread.sleep(300);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
+
                         }
 
 
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    } finally {
+                        httpclient.getConnectionManager().shutdown();
                     }
-                    else{
-                        Log.i("From Login", "Unauthorised");
-                        LoginActivity.this.runOnUiThread(new Runnable() {
-                            public void run() {
-                                Toast.makeText(LoginActivity.this, "Wrong username or password! Try Again!", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-
-                    }
-
-
-
-
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
-                    httpclient.getConnectionManager().shutdown();
                 }
-            }
-        }).start();
+            }).start();
+
         }
         else{
-            Toast.makeText(LoginActivity.this, "Username or password is empty!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(RgisterActivity.this, "Username or password is empty!", Toast.LENGTH_SHORT).show();
         }
 
 
@@ -152,10 +148,7 @@ public class LoginActivity extends Activity {
 
         return super.onOptionsItemSelected(item);
     }
-    public void regIntent(View view) {
-        Intent intent = new Intent(this, RgisterActivity.class);
-        startActivity(intent);
-    }
+
 
 
   /*  Thread thread = new Thread(new Runnable(){

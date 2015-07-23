@@ -74,6 +74,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     public static final String TAG = Activity.class.getSimpleName();
     private static final int TAKE_PICTURE = 1;
     private Uri imageUri;
+    String name;
 
 
 
@@ -84,12 +85,13 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
         setContentView(R.layout.activity_main);
         Button button  = (Button) findViewById(R.id.photoButton);
         photoView = (ImageView) findViewById(R.id.photoView);
+        photoView.setImageResource(R.drawable.log);
         comment = (TextView) findViewById(R.id.textField);
         sendButton = (Button) findViewById(R.id.sendButton);
         //Check if the user is logged
 
             SharedPreferences sharedPref = getSharedPreferences("userinfo", Context.MODE_PRIVATE);
-            String name = sharedPref.getString("username", "");
+            name = sharedPref.getString("username", "");
 
 
         if(name.isEmpty()) {
@@ -200,7 +202,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
     public void onConnectionFailed(ConnectionResult connectionResult) {
 
     }
-    Thread thread = new Thread(new Runnable(){
+   /* Thread thread = new Thread(new Runnable(){
         @Override
         public void run(){
 
@@ -208,7 +210,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
             String lon = Double.toString(currentLocation.getLongitude());
             Log.i(TAG, "Thread started");
             HttpClient httpclient = new DefaultHttpClient();
-            HttpPost httppost = new HttpPost("https://snaphole.pagekite.me/HelloWorldApp/Androidtest");
+            HttpPost httppost = new HttpPost("https://b20db94c.ngrok.io/snaptown/photos");
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             photo.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
                 byte[] byteArray = byteArrayOutputStream .toByteArray();
@@ -223,6 +225,8 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
                 if (comment.getText().toString() != null)
                     builder.addTextBody("comment", comment.getText().toString(), ContentType.create("text/plain", MIME.UTF8_CHARSET));
+                if (name != null)
+                    builder.addTextBody("username", name, ContentType.create("text/plain", MIME.UTF8_CHARSET));
                 if (lat != null)
                     builder.addTextBody("lat", lat, ContentType.create("text/plain", MIME.UTF8_CHARSET));
                 if (lon != null)
@@ -233,7 +237,11 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                 httppost.setEntity(builder.build());
                 HttpResponse response = httpclient.execute(httppost);
                 Log.i(TAG, "request sent");
-                Log.i(TAG, builder.build().toString());
+
+
+
+
+
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -241,11 +249,82 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
                 httpclient.getConnectionManager().shutdown();
             }
         }
-    });
+    });*/
 
 
     public void sendData(View view){
-        thread.start();
+        new Thread(new Runnable(){
+            @Override
+            public void run(){
 
+                String lat = Double.toString(currentLocation.getLatitude());
+                String lon = Double.toString(currentLocation.getLongitude());
+                Log.i(TAG, "Thread started");
+                HttpClient httpclient = new DefaultHttpClient();
+                HttpPost httppost = new HttpPost("https://b20db94c.ngrok.io/snaptown/photos");
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                photo.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
+                byte[] byteArray = byteArrayOutputStream .toByteArray();
+                String encoded = Base64.encodeToString(byteArray, Base64.DEFAULT);
+
+                try {
+
+                    MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+                    builder.setCharset(MIME.UTF8_CHARSET);
+
+                    httppost.addHeader("Accept", "application/json");
+
+                    if (comment.getText().toString() != null)
+                        builder.addTextBody("comment", comment.getText().toString(), ContentType.create("text/plain", MIME.UTF8_CHARSET));
+                    if (name != null)
+                        builder.addTextBody("username", name, ContentType.create("text/plain", MIME.UTF8_CHARSET));
+                    if (lat != null)
+                        builder.addTextBody("lat", lat, ContentType.create("text/plain", MIME.UTF8_CHARSET));
+                    if (lon != null)
+                        builder.addTextBody("lon", lon, ContentType.create("text/plain", MIME.UTF8_CHARSET));
+                    if (file != null)
+                        builder.addBinaryBody("PHOTO", file, ContentType.MULTIPART_FORM_DATA, file.getName());
+
+                    httppost.setEntity(builder.build());
+                    HttpResponse response = httpclient.execute(httppost);
+                    Log.i(TAG, "request sent");
+
+                    int statuscode =response.getStatusLine().getStatusCode();
+                    if(statuscode == 200) {
+                                 MainActivity.this.runOnUiThread(new Runnable() {
+                            public void run() {
+                                Toast.makeText(MainActivity.this, "Picture Uploaded!", Toast.LENGTH_SHORT).show();
+                                 comment.setText("");
+                                photoView.setImageResource(R.drawable.log);
+                            }
+                        });
+                    }
+                    else{
+                        Toast.makeText(MainActivity.this, "Error uploading picture!", Toast.LENGTH_SHORT).show();
+
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    httpclient.getConnectionManager().shutdown();
+                }
+            }
+        }).start();
+        sendButton.setVisibility(View.INVISIBLE);
+
+        Toast.makeText(this,"Sending Image....", Toast.LENGTH_SHORT)
+                .show();
+
+    }
+    public void logout(View view){
+        SharedPreferences sharedPref = getSharedPreferences("userinfo", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+
+        editor.putString("username","");
+        editor.putString("password","");
+        editor.apply();
+         Intent intent = new Intent(this, LoginActivity.class);
+         startActivity(intent);
     }
 }
